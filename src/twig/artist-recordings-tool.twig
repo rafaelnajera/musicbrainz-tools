@@ -1,0 +1,21 @@
+{% extends "base.twig" %}
+
+{% block title %}MB Tools: Artist Recordings{% endblock %}
+
+{% block extraCSS %}
+{% endblock %}
+
+{% block extraJS %}
+    <script type="application/javascript" src="/dist/ArtistRecordingsToolPage.bundle.js"></script>
+{% endblock %}
+
+
+{% block finalBodyJS %}
+    <script>
+
+        $(() => {
+            let mbid = '{{ mbid }}'
+            new ArtistRecordingsToolPage('#page-content', mbid)
+        })
+    </script>
+{%  endblock %}

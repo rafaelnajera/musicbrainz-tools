@@ -1,0 +1,6 @@
+/etc/config.php
+/src/js/node_modules/
+/public/dist/
+/src/php/vendor
+.DS_Store
+.idea/
