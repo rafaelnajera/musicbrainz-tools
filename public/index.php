@@ -102,6 +102,13 @@ $app->group('/api', function (RouteCollectorProxy $group) use ($container) {
         })
         ->setName('api.recording.data');
 
+    $group->get('/work/{mbid}/data',
+        function(Request $request, Response $response, array $args) use ($container){
+            $c = new MusicBrainz($container);
+            return $c->getWorkData($request, $response);
+        })
+        ->setName('api.work.data');
+
 
     $group->get('/artist/{mbid}/recordings[/{offset}]',
         function(Request $request, Response $response, array $args) use ($container){

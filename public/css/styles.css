@@ -26,10 +26,16 @@ div.mb-tool {
 }
 
 div.recordings-list {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     margin-left: 3em;
     margin-right: 3em;
-    grid-template-columns: max-content 1fr;
+    border: solid silver;
+    border-width: 0 1px 1px 0;
+}
+div.recording-div {
+    display: flex;
+    flex-direction: row;
 }
 
 div.recording-number {
@@ -37,13 +43,17 @@ div.recording-number {
     font-size: 1.5em;
     text-align: center;
     vertical-align: top;
-    border: 1px solid silver;
+    width: 5em;
+    border: solid silver;
+    border-width: 1px 0 0 1px;
 }
 
 div.recording-info {
     padding: 0.5em;
-    border: 1px solid silver;
     font-size: 0.8rem;
+    width: 100%;
+    border: solid silver;
+    border-width: 1px 0 0 1px;
 }
 
 div.recording-info p {
@@ -53,4 +63,18 @@ div.recording-info p {
 
 p.recording-title {
     font-size: 1.1em;
+}
+
+.data-warning-bad {
+    color: red;
+}
+
+a.mb-link, a.mb-link:visited{
+    color: #b48732;
+    text-decoration: none;
+}
+
+a, a:visited {
+    color: blue;
+    text-decoration: none;
 }

@@ -2,7 +2,7 @@
 
 namespace MusicBrainzTools\Slim\Api;
 
-use MusicBrainzTools\MusicBrainzApi\CachingMusicBrainzApiInterface;
+use MusicBrainzTools\MusicBrainzApi\CachingMusicBrainzApi;
 use MusicBrainzTools\MusicBrainzApi\MusicBrainzApiInterface;
 use MusicBrainzTools\Slim\Controller;
 use Psr\Container\ContainerInterface;
@@ -26,7 +26,7 @@ class MusicBrainz extends Controller
 
     protected function getApi() : MusicBrainzApiInterface {
         if ($this->api === null) {
-            $this->api = new CachingMusicBrainzApiInterface($this->dataCache);
+            $this->api = new CachingMusicBrainzApi($this->dataCache);
             $this->api->setLogger($this->logger->withName('MB_API'));
         }
         return $this->api;
@@ -50,6 +50,23 @@ class MusicBrainz extends Controller
         return $this->responseWithJson($response, json_encode($data));
     }
 
+    public function getWorkData(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
+    {
+        $mbid = $request->getAttribute('mbid', '');
+        if ($mbid === '') {
+            $this->logger->error("Empty mbid");
+            return $this->responseWithStatus($response, 404);
+        }
+        $this->logger->info("Work Data Request with MBID $mbid");
+        try {
+            $data = $this->getApi()->getWorkData($mbid, ['artist-rels']);
+        } catch(\Exception $e) {
+            $this->logger->error('Exception trying to get data:' . $e->getMessage() );
+            return $this->responseWithStatus($response, 502);
+        }
+        return $this->responseWithJson($response, json_encode($data));
+    }
+
     public function getRecordingData(ServerRequestInterface $request, ResponseInterface $response) : ResponseInterface
     {
         $mbid = $request->getAttribute('mbid', '');
@@ -59,7 +76,7 @@ class MusicBrainz extends Controller
         }
         $this->logger->info("Artist Data Request with MBID $mbid");
         try {
-            $data = $this->getApi()->getRecordingData($mbid, ['artists', 'releases', 'artist-rels']);
+            $data = $this->getApi()->getRecordingData($mbid, ['artists', 'releases', 'artist-rels', 'work-rels', 'place-rels']);
         } catch(\Exception $e) {
             $this->logger->error('Exception trying to get data:' . $e->getMessage() );
             return $this->responseWithStatus($response, 502);

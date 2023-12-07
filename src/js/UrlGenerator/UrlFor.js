@@ -33,6 +33,10 @@ export class UrlFor {
         return `/api/recording/${mbid}/data`
     }
 
+    static apiWorkData(mbid) {
+        return `/api/work/${mbid}/data`
+    }
+
     /**
      *
      * @param {string}mbid

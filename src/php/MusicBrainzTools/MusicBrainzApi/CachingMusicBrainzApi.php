@@ -10,7 +10,7 @@ use Psr\Log\NullLogger;
 use ThomasInstitut\DataCache\DataCache;
 use ThomasInstitut\DataCache\KeyNotInCacheException;
 
-class CachingMusicBrainzApiInterface implements MusicBrainzApiInterface, LoggerAwareInterface
+class CachingMusicBrainzApi implements MusicBrainzApiInterface, LoggerAwareInterface
 {
 
     use LoggerAwareTrait;
@@ -24,19 +24,29 @@ class CachingMusicBrainzApiInterface implements MusicBrainzApiInterface, LoggerA
      * @var Client|null
      */
     private ?Client $guzzleClient;
-    private int $ttl;
+    private int $defaultTtl;
     private string $lastMbApiCallCacheKey;
     private string $mbApiLock;
+    private array $ttlPerEntityType;
 
     public function __construct(DataCache $cache, int $cacheTtl = 86400, string $cachePrefix = 'mba-')
     {
         $this->cache = $cache;
         $this->cachePrefix = $cachePrefix;
         $this->guzzleClient = null;
-        $this->ttl = $cacheTtl;
+        $this->defaultTtl = $cacheTtl;
+        $this->ttlPerEntityType = [
+            'artist' => 90 * 86400,  // 90 days
+            'work' => 180 * 86400, // 180 days
+            'recording' => 86400 // 1 day
+        ];
         $this->setLogger(new NullLogger());
         $this->lastMbApiCallCacheKey = $this->cachePrefix . "-last-mb-api-call";
         $this->mbApiLock = $this->cachePrefix . '-api-lock';
+    }
+
+    private function getCacheTtl(string $entityType) : int {
+        return $this->ttlPerEntityType[$entityType] ?? $this->defaultTtl;
     }
 
     private function getGuzzleClient() : Client {
@@ -60,7 +70,7 @@ class CachingMusicBrainzApiInterface implements MusicBrainzApiInterface, LoggerA
             $data = unserialize($this->cache->get($cacheKey));
         } catch (KeyNotInCacheException) {
             $data = $this->doGetEntityData($entity, $mbid, $includes);
-            $this->cache->set($cacheKey, serialize($data), $this->ttl);
+            $this->cache->set($cacheKey, serialize($data), $this->getCacheTtl($entity));
         }
         return $data;
     }
@@ -174,7 +184,7 @@ class CachingMusicBrainzApiInterface implements MusicBrainzApiInterface, LoggerA
             $data = unserialize($this->cache->get($cacheKey));
         } catch (KeyNotInCacheException) {
             $data  = $this->doBrowseData('recording', 'artist', $mbid, [ 'artist-credits' ], $offset);
-            $this->cache->set($cacheKey, serialize($data), $this->ttl);
+            $this->cache->set($cacheKey, serialize($data), $this->defaultTtl);
         }
         return $data;
     }
@@ -185,5 +195,13 @@ class CachingMusicBrainzApiInterface implements MusicBrainzApiInterface, LoggerA
     public function getRecordingData(string $mbid, array $includes): array
     {
         return $this->getEntityData('recording', $mbid, $includes);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getWorkData(string $mbid, array $includes): array
+    {
+       return $this->getEntityData('work', $mbid, $includes);
     }
 }
